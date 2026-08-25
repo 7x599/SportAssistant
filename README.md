@@ -44,7 +44,7 @@ TrainingSession                   (D)
 MainWindow                        (C)
 ```
 
-## 你（成员 B）的 Windows 本地部署
+## 你的Windows 本地部署
 
 推荐在 Windows 10/11 的“Developer PowerShell for VS 2022”执行。
 
@@ -126,7 +126,7 @@ CSV 默认位于 `%LOCALAPPDATA%\StudentTeam\SportAssistant\data\training_record
 main                 稳定提交版
 develop              每 1–2 天集成
 feature/pose         A
-feature/exercise     B（你）
+feature/exercise     B
 feature/ui           C
 feature/training     D
 ```
