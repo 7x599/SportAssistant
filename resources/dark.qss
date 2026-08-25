@@ -1,0 +1,313 @@
+/* SportAssistant native Operate-mode theme. */
+
+* {
+    font-family: "Microsoft YaHei UI", "Noto Sans CJK SC", sans-serif;
+    color: #E8F0ED;
+    font-size: 14px;
+}
+
+QMainWindow, QWidget#HomePage, QWidget#TrainingPage, QWidget#ResultPage,
+QStackedWidget#AppPages {
+    background: #0B1113;
+}
+
+QWidget#TopBar {
+    background: #0D1517;
+}
+
+QLabel#BrandMark {
+    background: #176D78;
+    color: #F4FFFC;
+    border: 1px solid #42BFD0;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+QLabel#TopTitle {
+    color: #F4F8F6;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+QLabel#TopSubtitle, QLabel#MutedText {
+    color: #91A4A2;
+    font-size: 12px;
+}
+
+QLabel#BuildTag, QLabel#PipelineText, QLabel#EvidenceText {
+    color: #65C8D4;
+    font-family: "Cascadia Mono", "Consolas", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+QFrame#Divider {
+    color: #253237;
+    background: #253237;
+    max-height: 1px;
+}
+
+QLabel#HomeHeadline {
+    color: #F2F7F4;
+    font-size: 42px;
+    font-weight: 750;
+    letter-spacing: -1px;
+}
+
+QLabel#HomeLead {
+    color: #B8C8C4;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+QWidget#SetupPanel, QWidget#ResultReport {
+    background: #10191B;
+    border: 1px solid #2C3C40;
+    border-radius: 6px;
+}
+
+QLabel#SectionTitle {
+    color: #F5FAF8;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+QLabel#FieldLabel, QLabel#MetricName {
+    color: #A9BBB7;
+    font-size: 13px;
+    font-weight: 550;
+}
+
+QLabel#InputSummary {
+    background: #0A1214;
+    border: 1px solid #27383B;
+    border-radius: 4px;
+    color: #B9D1CC;
+    padding: 10px 12px;
+}
+
+QComboBox, QSpinBox {
+    min-height: 42px;
+    background: #0B1315;
+    border: 1px solid #34464A;
+    border-radius: 4px;
+    color: #EAF2EF;
+    padding: 0 12px;
+    selection-background-color: #187D89;
+}
+
+QComboBox:hover, QSpinBox:hover {
+    border-color: #568187;
+}
+
+QComboBox:focus, QSpinBox:focus, QPushButton:focus {
+    border: 2px solid #6DD6E1;
+}
+
+QComboBox::drop-down {
+    width: 30px;
+    border: none;
+}
+
+QComboBox QAbstractItemView {
+    background: #111B1D;
+    border: 1px solid #3C555A;
+    selection-background-color: #176D78;
+    outline: none;
+}
+
+QPushButton {
+    min-height: 40px;
+    border-radius: 5px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-weight: 650;
+}
+
+QPushButton#PrimaryButton {
+    background: #42C7D6;
+    color: #061012;
+    border: 1px solid #76DEE7;
+}
+
+QPushButton#PrimaryButton:hover {
+    background: #62D5E0;
+}
+
+QPushButton#PrimaryButton:pressed {
+    background: #2EA9B7;
+}
+
+QPushButton#SecondaryButton {
+    background: #142326;
+    color: #D6E5E1;
+    border: 1px solid #4CAEB9;
+}
+
+QPushButton#SecondaryButton:hover, QPushButton#QuietButton:hover {
+    background: #1B3033;
+    border-color: #6ED1DC;
+}
+
+QPushButton#DangerButton {
+    background: #5F2528;
+    color: #FFF0EE;
+    border: 1px solid #D96C6C;
+}
+
+QPushButton#DangerButton:hover {
+    background: #793033;
+}
+
+QPushButton#QuietButton {
+    background: #0C1517;
+    color: #AEC0BC;
+    border: 1px solid #314348;
+    padding: 0 11px;
+}
+
+QPushButton:disabled {
+    background: #172023;
+    color: #667572;
+    border-color: #283336;
+}
+
+QWidget#VideoStage {
+    background: #080D0E;
+    border: 1px solid #2A383C;
+    border-radius: 5px;
+}
+
+QWidget#LiveStrip {
+    background: #0E181A;
+    border-bottom: 1px solid #2A383C;
+}
+
+QLabel#LiveText {
+    color: #57D59B;
+    font-family: "Cascadia Mono", "Consolas", monospace;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+QLabel#VideoLabel {
+    color: #6F8581;
+    background: #0A1012;
+}
+
+QWidget#PerformanceRail {
+    background: #10181A;
+    border: 1px solid #2B3A3D;
+    border-radius: 5px;
+}
+
+QLabel#ExerciseTitle, QLabel#ResultExercise {
+    color: #D7E4E0;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+QLabel#CountNumber {
+    color: #F7FAF8;
+    font-family: "Bahnschrift SemiCondensed", "Microsoft YaHei UI", sans-serif;
+    font-size: 76px;
+    font-weight: 800;
+}
+
+QLabel#CountTarget {
+    color: #879793;
+    font-family: "Bahnschrift SemiCondensed", sans-serif;
+    font-size: 34px;
+    font-weight: 650;
+    padding-bottom: 9px;
+}
+
+QLabel#ProgressNumber, QLabel#MetricAccent {
+    color: #56CFD7;
+    font-family: "Bahnschrift", "Microsoft YaHei UI", sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+QProgressBar {
+    min-height: 9px;
+    max-height: 9px;
+    background: #2A3639;
+    border: none;
+    border-radius: 3px;
+}
+
+QProgressBar::chunk {
+    background: #42C7D6;
+    border-radius: 3px;
+}
+
+QWidget#MetricRow {
+    background: #0C1416;
+    border: 1px solid #273538;
+    border-radius: 4px;
+}
+
+QLabel#MetricValue {
+    color: #F0F5F3;
+    font-family: "Bahnschrift", "Microsoft YaHei UI", sans-serif;
+    font-size: 20px;
+    font-weight: 650;
+}
+
+QLabel#MetricWarning {
+    color: #F0B45D;
+    font-family: "Bahnschrift", sans-serif;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+QLabel#StatusPanel {
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-weight: 650;
+}
+
+QLabel#StatusPanel[state="neutral"] {
+    background: #142023;
+    color: #B5C6C2;
+    border: 1px solid #39494C;
+}
+
+QLabel#StatusPanel[state="ok"] {
+    background: #102821;
+    color: #7CE2AE;
+    border: 1px solid #398C67;
+}
+
+QLabel#StatusPanel[state="warning"] {
+    background: #2B2114;
+    color: #F0BF72;
+    border: 1px solid #956D35;
+}
+
+QWidget#CommandDock {
+    background: #0D1517;
+    border-top: 1px solid #263438;
+}
+
+QLabel#ResultCount {
+    color: #F5FAF8;
+    font-family: "Bahnschrift SemiCondensed", "Microsoft YaHei UI", sans-serif;
+    font-size: 78px;
+    font-weight: 800;
+}
+
+QToolTip {
+    background: #172326;
+    color: #EAF2EF;
+    border: 1px solid #456067;
+    padding: 6px 8px;
+}
+
+QMessageBox {
+    background: #11191B;
+}

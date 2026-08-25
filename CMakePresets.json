@@ -1,0 +1,58 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 24,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-release",
+      "displayName": "Windows Release (vcpkg)",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/windows-release",
+      "architecture": "x64",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "SPORTASSISTANT_BUILD_GUI": "ON",
+        "SPORTASSISTANT_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "core-tests",
+      "displayName": "Portable core tests",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/core-tests",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "SPORTASSISTANT_BUILD_GUI": "OFF",
+        "SPORTASSISTANT_BUILD_TESTS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-release",
+      "configurePreset": "windows-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "core-tests",
+      "configurePreset": "core-tests"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "windows-release",
+      "configurePreset": "windows-release",
+      "configuration": "Release",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "core-tests",
+      "configurePreset": "core-tests",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}

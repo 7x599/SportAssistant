@@ -1,0 +1,14 @@
+/.vs/
+/build/
+/dist/
+/.tools/
+/vcpkg_installed/
+/.venv-model/
+__pycache__/
+*.user
+*.suo
+*.VC.db
+*.onnx
+*.pt
+/data/*.csv
+/.impeccable/
