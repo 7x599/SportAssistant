@@ -1,4 +1,4 @@
-param([switch]$InstallPrerequisites)
+﻿param([switch]$InstallPrerequisites)
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
@@ -16,7 +16,7 @@ if (-not (Get-Command cmake -ErrorAction SilentlyContinue)) { $missing += "CMake
 
 if ($InstallPrerequisites) {
     if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-        throw "未找到 winget。请先从 Microsoft Store 安装“应用安装程序”。"
+        throw "未找到 winget。请先从 Microsoft Store 安装""应用安装程序""。"
     }
     Install-WingetPackage "Git.Git"
     Install-WingetPackage "Kitware.CMake"
