@@ -66,75 +66,284 @@ Pose DemoPoseSource::makeSquatPose(double angle, double timestamp) const {
     pose.timestampSeconds = timestamp;
     pose.frameIndex = frameIndex_;
 
-    const double kneeX = 520.0;
-    const double kneeY = 440.0;
+    // 脚踝固定，膝盖和髋部联动
+    const double clampedAngle = std::clamp(angle, 35.0, 170.0);
+    const double crouch =
+        (170.0 - clampedAngle) / (170.0 - 82.0);
+
     const double thigh = 165.0;
     const double shin = 175.0;
-    const double crouch = (170.0 - angle) / 85.0;
-    const double hipX = kneeX - 20.0 - crouch * 125.0;
-    const double hipY = kneeY - std::sqrt(std::max(1.0, thigh * thigh -
-                                                   (kneeX - hipX) * (kneeX - hipX)));
-    const double v1 = std::atan2(hipY - kneeY, hipX - kneeX);
-    const double ankleDirection = v1 + angle * pi / 180.0;
-    const double ankleX = kneeX + shin * std::cos(ankleDirection);
-    const double ankleY = kneeY + shin * std::sin(ankleDirection);
-    const double shoulderX = hipX - 35.0 * crouch;
-    const double shoulderY = hipY - 190.0;
+
+    // 脚踝固定在地面
+    const double ankleX = 650.0;
+    const double ankleY = 650.0;
+
+    // 下蹲时膝盖向前运动
+    const double ankleToKneeDirection =
+        (-92.0 + 30.0 * crouch) * pi / 180.0;
+
+    const double kneeX =
+        ankleX + shin * std::cos(ankleToKneeDirection);
+    const double kneeY =
+        ankleY + shin * std::sin(ankleToKneeDirection);
+
+    // 根据目标膝关节角度计算髋部位置
+    const double kneeToAnkleDirection =
+        std::atan2(ankleY - kneeY, ankleX - kneeX);
+
+    const double kneeToHipDirection =
+        kneeToAnkleDirection + clampedAngle * pi / 180.0;
+
+    const double hipX =
+        kneeX + thigh * std::cos(kneeToHipDirection);
+    const double hipY =
+        kneeY + thigh * std::sin(kneeToHipDirection);
+
+    // 下蹲时上身轻微前倾
+    const double torsoDirection =
+        (-90.0 + 18.0 * crouch) * pi / 180.0;
+
+    const double shoulderX =
+        hipX + 190.0 * std::cos(torsoDirection);
+    const double shoulderY =
+        hipY + 190.0 * std::sin(torsoDirection);
 
     for (int side = 0; side < 2; ++side) {
         const double offset = side == 0 ? -12.0 : 12.0;
-        const KeypointId shoulder = side == 0 ? KeypointId::LeftShoulder : KeypointId::RightShoulder;
-        const KeypointId elbow = side == 0 ? KeypointId::LeftElbow : KeypointId::RightElbow;
-        const KeypointId wrist = side == 0 ? KeypointId::LeftWrist : KeypointId::RightWrist;
-        const KeypointId hip = side == 0 ? KeypointId::LeftHip : KeypointId::RightHip;
-        const KeypointId knee = side == 0 ? KeypointId::LeftKnee : KeypointId::RightKnee;
-        const KeypointId ankle = side == 0 ? KeypointId::LeftAnkle : KeypointId::RightAnkle;
-        pose.at(shoulder) = point(shoulderX, shoulderY + offset);
-        pose.at(elbow) = point(shoulderX + 95.0, shoulderY + 80.0 + offset);
-        pose.at(wrist) = point(shoulderX + 165.0, shoulderY + 55.0 + offset);
-        pose.at(hip) = point(hipX, hipY + offset);
-        pose.at(knee) = point(kneeX, kneeY + offset);
-        pose.at(ankle) = point(ankleX, ankleY + offset);
+
+        const KeypointId shoulder =
+            side == 0 ? KeypointId::LeftShoulder
+            : KeypointId::RightShoulder;
+
+        const KeypointId elbow =
+            side == 0 ? KeypointId::LeftElbow
+            : KeypointId::RightElbow;
+
+        const KeypointId wrist =
+            side == 0 ? KeypointId::LeftWrist
+            : KeypointId::RightWrist;
+
+        const KeypointId hip =
+            side == 0 ? KeypointId::LeftHip
+            : KeypointId::RightHip;
+
+        const KeypointId knee =
+            side == 0 ? KeypointId::LeftKnee
+            : KeypointId::RightKnee;
+
+        const KeypointId ankle =
+            side == 0 ? KeypointId::LeftAnkle
+            : KeypointId::RightAnkle;
+
+        pose.at(shoulder) =
+            point(shoulderX, shoulderY + offset);
+
+        pose.at(elbow) =
+            point(shoulderX + 110.0,
+                shoulderY + 40.0 +
+                25.0 * crouch + offset);
+
+        pose.at(wrist) =
+            point(shoulderX + 205.0,
+                shoulderY + 25.0 +
+                20.0 * crouch + offset);
+
+        pose.at(hip) =
+            point(hipX, hipY + offset);
+
+        pose.at(knee) =
+            point(kneeX, kneeY + offset);
+
+        pose.at(ankle) =
+            point(ankleX, ankleY + offset);
     }
-    pose.at(KeypointId::Nose) = point(shoulderX + 18.0, shoulderY - 62.0);
+
+    pose.at(KeypointId::Nose) =
+        point(shoulderX + 18.0, shoulderY - 62.0);
+
     return pose;
 }
 
-Pose DemoPoseSource::makePushUpPose(double angle, double bodyAngle, double timestamp) const {
+Pose DemoPoseSource::makePushUpPose(
+    double angle,
+    double bodyAngle,
+    double timestamp) const {
+
     Pose pose;
     pose.score = 0.99F;
     pose.timestampSeconds = timestamp;
     pose.frameIndex = frameIndex_;
 
-    const double shoulderX = 285.0;
-    const double shoulderY = 315.0;
-    const double elbowX = 430.0;
-    const double elbowY = shoulderY;
-    const double forearmDirection = pi - angle * pi / 180.0;
-    const double wristX = elbowX + 150.0 * std::cos(forearmDirection);
-    const double wristY = elbowY + 150.0 * std::sin(forearmDirection);
-    const double sag = (180.0 - bodyAngle) * 1.4;
-    const double hipX = 535.0;
-    const double hipY = shoulderY + sag;
-    const double ankleX = 755.0;
-    const double ankleY = shoulderY;
+    const double clampedAngle =
+        std::clamp(angle, 55.0, 170.0);
+
+    const double bend =
+        (170.0 - clampedAngle) / (170.0 - 78.0);
+
+    const double upperArm = 120.0;
+    const double forearm = 125.0;
+    const double elbowRadians =
+        clampedAngle * pi / 180.0;
+
+    // 根据肘关节角度计算肩到手腕的距离
+    const double shoulderToWrist = std::sqrt(
+        upperArm * upperArm +
+        forearm * forearm -
+        2.0 * upperArm * forearm *
+        std::cos(elbowRadians)
+    );
+
+    // 手腕固定在地面
+    const double wristX = 350.0;
+    const double wristY = 620.0;
+
+    // 下压时肩膀向下并略微向后移动
+    const double wristToShoulderDirection =
+        (-90.0 + 6.0 * bend) * pi / 180.0;
+
+    const double shoulderX =
+        wristX +
+        shoulderToWrist *
+        std::cos(wristToShoulderDirection);
+
+    const double shoulderY =
+        wristY +
+        shoulderToWrist *
+        std::sin(wristToShoulderDirection);
+
+    // 通过两个圆的交点计算手肘位置
+    const double armDx = wristX - shoulderX;
+    const double armDy = wristY - shoulderY;
+
+    const double unitX =
+        armDx / shoulderToWrist;
+    const double unitY =
+        armDy / shoulderToWrist;
+
+    const double along =
+        (upperArm * upperArm -
+            forearm * forearm +
+            shoulderToWrist * shoulderToWrist) /
+        (2.0 * shoulderToWrist);
+
+    const double height = std::sqrt(
+        std::max(
+            0.0,
+            upperArm * upperArm -
+            along * along
+        )
+    );
+
+    const double baseX =
+        shoulderX + along * unitX;
+    const double baseY =
+        shoulderY + along * unitY;
+
+    const double perpendicularX = -unitY;
+    const double perpendicularY = unitX;
+
+    // 选择朝向脚部的交点，让手肘自然向后弯曲
+    const double elbowX =
+        baseX - height * perpendicularX;
+    const double elbowY =
+        baseY - height * perpendicularY;
+
+    // 脚踝固定
+    const double ankleX = 820.0;
+    const double ankleY = 620.0;
+
+    // 构造接近直线的肩—髋—踝
+    const double bodyDx =
+        ankleX - shoulderX;
+    const double bodyDy =
+        ankleY - shoulderY;
+
+    const double bodyLength =
+        std::hypot(bodyDx, bodyDy);
+
+    const double bodyUnitX =
+        bodyDx / bodyLength;
+    const double bodyUnitY =
+        bodyDy / bodyLength;
+
+    const double bodyPerpendicularX =
+        -bodyUnitY;
+    const double bodyPerpendicularY =
+        bodyUnitX;
+
+    const double safeBodyAngle =
+        std::clamp(bodyAngle, 120.0, 179.0);
+
+    const double bodySag =
+        bodyLength /
+        (2.0 *
+            std::tan(safeBodyAngle * pi / 360.0));
+
+    const double hipX =
+        (shoulderX + ankleX) * 0.5 +
+        bodySag * bodyPerpendicularX;
+
+    const double hipY =
+        (shoulderY + ankleY) * 0.5 +
+        bodySag * bodyPerpendicularY;
+
+    const double kneeX =
+        hipX + (ankleX - hipX) * 0.58;
+
+    const double kneeY =
+        hipY + (ankleY - hipY) * 0.58;
 
     for (int side = 0; side < 2; ++side) {
-        const double offset = side == 0 ? -12.0 : 12.0;
-        const KeypointId shoulder = side == 0 ? KeypointId::LeftShoulder : KeypointId::RightShoulder;
-        const KeypointId elbow = side == 0 ? KeypointId::LeftElbow : KeypointId::RightElbow;
-        const KeypointId wrist = side == 0 ? KeypointId::LeftWrist : KeypointId::RightWrist;
-        const KeypointId hip = side == 0 ? KeypointId::LeftHip : KeypointId::RightHip;
-        const KeypointId knee = side == 0 ? KeypointId::LeftKnee : KeypointId::RightKnee;
-        const KeypointId ankle = side == 0 ? KeypointId::LeftAnkle : KeypointId::RightAnkle;
-        pose.at(shoulder) = point(shoulderX, shoulderY + offset);
-        pose.at(elbow) = point(elbowX, elbowY + offset);
-        pose.at(wrist) = point(wristX, wristY + offset);
-        pose.at(hip) = point(hipX, hipY + offset);
-        pose.at(knee) = point((hipX + ankleX) * 0.5, (hipY + ankleY) * 0.5 + offset);
-        pose.at(ankle) = point(ankleX, ankleY + offset);
+        const double offset =
+            side == 0 ? -12.0 : 12.0;
+
+        const KeypointId shoulder =
+            side == 0 ? KeypointId::LeftShoulder
+            : KeypointId::RightShoulder;
+
+        const KeypointId elbow =
+            side == 0 ? KeypointId::LeftElbow
+            : KeypointId::RightElbow;
+
+        const KeypointId wrist =
+            side == 0 ? KeypointId::LeftWrist
+            : KeypointId::RightWrist;
+
+        const KeypointId hip =
+            side == 0 ? KeypointId::LeftHip
+            : KeypointId::RightHip;
+
+        const KeypointId knee =
+            side == 0 ? KeypointId::LeftKnee
+            : KeypointId::RightKnee;
+
+        const KeypointId ankle =
+            side == 0 ? KeypointId::LeftAnkle
+            : KeypointId::RightAnkle;
+
+        pose.at(shoulder) =
+            point(shoulderX, shoulderY + offset);
+
+        pose.at(elbow) =
+            point(elbowX, elbowY + offset);
+
+        pose.at(wrist) =
+            point(wristX, wristY + offset);
+
+        pose.at(hip) =
+            point(hipX, hipY + offset);
+
+        pose.at(knee) =
+            point(kneeX, kneeY + offset);
+
+        pose.at(ankle) =
+            point(ankleX, ankleY + offset);
     }
-    pose.at(KeypointId::Nose) = point(shoulderX - 55.0, shoulderY - 28.0);
+
+    pose.at(KeypointId::Nose) =
+        point(shoulderX - 55.0,
+            shoulderY - 28.0);
+
     return pose;
 }
 
