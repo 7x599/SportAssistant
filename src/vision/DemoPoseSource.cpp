@@ -67,9 +67,9 @@ Pose DemoPoseSource::makeSquatPose(double angle, double timestamp) const {
     pose.frameIndex = frameIndex_;
 
     // 脚踝固定，膝盖和髋部联动
-    const double clampedAngle = std::clamp(angle, 35.0, 170.0);
+    const double clampedAngle = std::clamp(angle, 45.0, 170.0);
     const double crouch =
-        (170.0 - clampedAngle) / (170.0 - 82.0);
+        (170.0 - clampedAngle) / (170.0 - 45.0);
 
     const double thigh = 165.0;
     const double shin = 175.0;
@@ -178,7 +178,7 @@ Pose DemoPoseSource::makePushUpPose(
         std::clamp(angle, 55.0, 170.0);
 
     const double bend =
-        (170.0 - clampedAngle) / (170.0 - 78.0);
+        (170.0 - clampedAngle) / (170.0 - 55.0);
 
     const double upperArm = 120.0;
     const double forearm = 125.0;
@@ -354,10 +354,10 @@ Pose DemoPoseSource::next(cv::Mat& frame) {
     double mainAngle = 0.0;
     Pose pose;
     if (exercise_ == ExerciseType::Squat) {
-        mainAngle = cycleAngle(seconds, 170.0, 82.0);
+        mainAngle = cycleAngle(seconds, 170.0, 45.0);
         pose = makeSquatPose(mainAngle, seconds);
     } else {
-        mainAngle = cycleAngle(seconds, 170.0, 78.0);
+        mainAngle = cycleAngle(seconds, 170.0, 55.0);
         pose = makePushUpPose(mainAngle, 176.0, seconds);
     }
     draw(frame, pose, mainAngle);
