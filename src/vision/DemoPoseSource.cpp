@@ -97,6 +97,10 @@ Pose DemoPoseSource::makeSquatPose(double angle, double timestamp) const {
         pose.at(ankle) = point(ankleX, ankleY + offset);
     }
     pose.at(KeypointId::Nose) = point(shoulderX + 18.0, shoulderY - 62.0);
+    pose.at(KeypointId::LeftEye) = point(shoulderX + 10.0, shoulderY - 68.0);
+    pose.at(KeypointId::RightEye) = point(shoulderX + 26.0, shoulderY - 68.0);
+    pose.at(KeypointId::LeftEar) = point(shoulderX + 2.0, shoulderY - 62.0);
+    pose.at(KeypointId::RightEar) = point(shoulderX + 34.0, shoulderY - 62.0);
     return pose;
 }
 
@@ -135,6 +139,10 @@ Pose DemoPoseSource::makePushUpPose(double angle, double bodyAngle, double times
         pose.at(ankle) = point(ankleX, ankleY + offset);
     }
     pose.at(KeypointId::Nose) = point(shoulderX - 55.0, shoulderY - 28.0);
+    pose.at(KeypointId::LeftEye) = point(shoulderX - 63.0, shoulderY - 34.0);
+    pose.at(KeypointId::RightEye) = point(shoulderX - 47.0, shoulderY - 34.0);
+    pose.at(KeypointId::LeftEar) = point(shoulderX - 71.0, shoulderY - 28.0);
+    pose.at(KeypointId::RightEar) = point(shoulderX - 39.0, shoulderY - 28.0);
     return pose;
 }
 
