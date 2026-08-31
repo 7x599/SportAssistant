@@ -66,7 +66,7 @@ Pose DemoPoseSource::makeSquatPose(double angle, double timestamp) const {
     pose.timestampSeconds = timestamp;
     pose.frameIndex = frameIndex_;
 
-    // ½Åõ×¹Ì¶¨£¬Ï¥¸ÇºÍ÷Å²¿Áª¶¯
+    // ï¿½ï¿½ï¿½×¹Ì¶ï¿½ï¿½ï¿½Ï¥ï¿½Çºï¿½ï¿½Å²ï¿½ï¿½ï¿½ï¿½ï¿½
     const double clampedAngle = std::clamp(angle, 45.0, 170.0);
     const double crouch =
         (170.0 - clampedAngle) / (170.0 - 45.0);
@@ -74,11 +74,11 @@ Pose DemoPoseSource::makeSquatPose(double angle, double timestamp) const {
     const double thigh = 165.0;
     const double shin = 175.0;
 
-    // ½Åõ×¹Ì¶¨ÔÚµØÃæ
+    // ï¿½ï¿½ï¿½×¹Ì¶ï¿½ï¿½Úµï¿½ï¿½ï¿½
     const double ankleX = 650.0;
     const double ankleY = 650.0;
 
-    // ÏÂ¶×Ê±Ï¥¸ÇÏòÇ°ÔË¶¯
+    // ï¿½Â¶ï¿½Ê±Ï¥ï¿½ï¿½ï¿½ï¿½Ç°ï¿½Ë¶ï¿½
     const double ankleToKneeDirection =
         (-92.0 + 30.0 * crouch) * pi / 180.0;
 
@@ -87,7 +87,7 @@ Pose DemoPoseSource::makeSquatPose(double angle, double timestamp) const {
     const double kneeY =
         ankleY + shin * std::sin(ankleToKneeDirection);
 
-    // ¸ù¾ÝÄ¿±êÏ¥¹Ø½Ú½Ç¶È¼ÆËã÷Å²¿Î»ÖÃ
+    // ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½Ï¥ï¿½Ø½Ú½Ç¶È¼ï¿½ï¿½ï¿½ï¿½Å²ï¿½Î»ï¿½ï¿½
     const double kneeToAnkleDirection =
         std::atan2(ankleY - kneeY, ankleX - kneeX);
 
@@ -99,7 +99,7 @@ Pose DemoPoseSource::makeSquatPose(double angle, double timestamp) const {
     const double hipY =
         kneeY + thigh * std::sin(kneeToHipDirection);
 
-    // ÏÂ¶×Ê±ÉÏÉíÇáÎ¢Ç°Çã
+    // ï¿½Â¶ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¢Ç°ï¿½ï¿½
     const double torsoDirection =
         (-90.0 + 18.0 * crouch) * pi / 180.0;
 
@@ -157,10 +157,20 @@ Pose DemoPoseSource::makeSquatPose(double angle, double timestamp) const {
         pose.at(ankle) =
             point(ankleX, ankleY + offset);
     }
+pose.at(KeypointId::Nose) =
+    point(shoulderX + 18.0, shoulderY - 62.0);
 
-    pose.at(KeypointId::Nose) =
-        point(shoulderX + 18.0, shoulderY - 62.0);
+pose.at(KeypointId::LeftEye) =
+    point(shoulderX + 10.0, shoulderY - 68.0);
 
+pose.at(KeypointId::RightEye) =
+    point(shoulderX + 26.0, shoulderY - 68.0);
+
+pose.at(KeypointId::LeftEar) =
+    point(shoulderX + 2.0, shoulderY - 62.0);
+
+pose.at(KeypointId::RightEar) =
+    point(shoulderX + 34.0, shoulderY - 62.0);
     return pose;
 }
 
@@ -185,7 +195,7 @@ Pose DemoPoseSource::makePushUpPose(
     const double elbowRadians =
         clampedAngle * pi / 180.0;
 
-    // ¸ù¾ÝÖâ¹Ø½Ú½Ç¶È¼ÆËã¼çµ½ÊÖÍóµÄ¾àÀë
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø½Ú½Ç¶È¼ï¿½ï¿½ï¿½çµ½ï¿½ï¿½ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½
     const double shoulderToWrist = std::sqrt(
         upperArm * upperArm +
         forearm * forearm -
@@ -193,11 +203,11 @@ Pose DemoPoseSource::makePushUpPose(
         std::cos(elbowRadians)
     );
 
-    // ÊÖÍó¹Ì¶¨ÔÚµØÃæ
+    // ï¿½ï¿½ï¿½ï¿½Ì¶ï¿½ï¿½Úµï¿½ï¿½ï¿½
     const double wristX = 350.0;
     const double wristY = 620.0;
 
-    // ÏÂÑ¹Ê±¼ç°òÏòÏÂ²¢ÂÔÎ¢ÏòºóÒÆ¶¯
+    // ï¿½ï¿½Ñ¹Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â²ï¿½ï¿½ï¿½Î¢ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½
     const double wristToShoulderDirection =
         (-90.0 + 6.0 * bend) * pi / 180.0;
 
@@ -211,7 +221,7 @@ Pose DemoPoseSource::makePushUpPose(
         shoulderToWrist *
         std::sin(wristToShoulderDirection);
 
-    // Í¨¹ýÁ½¸öÔ²µÄ½»µã¼ÆËãÊÖÖâÎ»ÖÃ
+    // Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô²ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
     const double armDx = wristX - shoulderX;
     const double armDy = wristY - shoulderY;
 
@@ -242,17 +252,17 @@ Pose DemoPoseSource::makePushUpPose(
     const double perpendicularX = -unitY;
     const double perpendicularY = unitX;
 
-    // Ñ¡Ôñ³¯Ïò½Å²¿µÄ½»µã£¬ÈÃÊÖÖâ×ÔÈ»ÏòºóÍäÇú
+    // Ñ¡ï¿½ï¿½ï¿½ï¿½Å²ï¿½ï¿½Ä½ï¿½ï¿½ã£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     const double elbowX =
         baseX - height * perpendicularX;
     const double elbowY =
         baseY - height * perpendicularY;
 
-    // ½Åõ×¹Ì¶¨
+    // ï¿½ï¿½ï¿½×¹Ì¶ï¿½
     const double ankleX = 820.0;
     const double ankleY = 620.0;
 
-    // ¹¹Ôì½Ó½üÖ±ÏßµÄ¼ç¡ª÷Å¡ªõ×
+    // ï¿½ï¿½ï¿½ï¿½Ó½ï¿½Ö±ï¿½ßµÄ¼ç¡ªï¿½Å¡ï¿½ï¿½ï¿½
     const double bodyDx =
         ankleX - shoulderX;
     const double bodyDy =
@@ -339,11 +349,20 @@ Pose DemoPoseSource::makePushUpPose(
         pose.at(ankle) =
             point(ankleX, ankleY + offset);
     }
+pose.at(KeypointId::Nose) =
+    point(shoulderX - 55.0, shoulderY - 28.0);
 
-    pose.at(KeypointId::Nose) =
-        point(shoulderX - 55.0,
-            shoulderY - 28.0);
+pose.at(KeypointId::LeftEye) =
+    point(shoulderX - 63.0, shoulderY - 34.0);
 
+pose.at(KeypointId::RightEye) =
+    point(shoulderX - 47.0, shoulderY - 34.0);
+
+pose.at(KeypointId::LeftEar) =
+    point(shoulderX - 71.0, shoulderY - 28.0);
+
+pose.at(KeypointId::RightEar) =
+    point(shoulderX - 39.0, shoulderY - 28.0);
     return pose;
 }
 

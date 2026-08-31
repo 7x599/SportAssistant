@@ -78,7 +78,7 @@ Pose PoseDetector::detect(const cv::Mat& frame, double timestampSeconds) {
 
     cv::Mat blob = cv::dnn::blobFromImage(
         letterboxed, 1.0 / 255.0, cv::Size(inputWidth_, inputHeight_),
-        cv::Scalar(), true, false);
+        cv::Scalar(), true, true);
     net_.setInput(blob);
     cv::Mat output = net_.forward();
     if (output.empty()) {
@@ -89,15 +89,14 @@ Pose PoseDetector::detect(const cv::Mat& frame, double timestampSeconds) {
     if (output.dims == 3) {
         const int first = output.size[1];
         const int second = output.size[2];
-        if (first <= 128 && second > first) {
-            cv::Mat shaped(first, second, CV_32F, output.ptr<float>());
-            cv::transpose(shaped, candidates);
-        } else {
-            candidates = cv::Mat(first, second, CV_32F, output.ptr<float>()).clone();
-        }
-    } else if (output.dims == 2) {
-        candidates = output;
-    } else {
+        cv::Mat temp(first, second, CV_32F, output.ptr<float>());
+        cv::transpose(temp, candidates);
+        candidates = candidates.clone(); // 强制拷贝内存，防止野指针
+    }
+    else if (output.dims == 2) {
+        candidates = output.clone();
+    }
+    else {
         lastError_ = "无法识别的模型输出维度";
         return pose;
     }
