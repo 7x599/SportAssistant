@@ -40,6 +40,11 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 #include <cmath>
 #include <utility>
 
+#include <QElapsedTimer>
+
+#include <algorithm>
+#include <numeric>
+
 namespace sport {
 
 namespace {
@@ -444,6 +449,7 @@ void MainWindow::resetAnalyzer() {
 }
 
 void MainWindow::startTraining() {
+    processingTimesMs_.clear();
     setExercise(static_cast<ExerciseType>(exerciseCombo_->currentData().toInt()));
     session_.start(exercise_, targetSpin_->value());
     exerciseLabel_->setText(QString::fromUtf8(exerciseName(exercise_).data()));
@@ -529,28 +535,100 @@ void MainWindow::selectDemo() {
 }
 
 void MainWindow::processFrame() {
+    // 使用单调计时器测量本次处理耗时。
+    QElapsedTimer processingTimer;
+    processingTimer.start();
+
     ProcessedFrame frame = pipeline_.read();
+
     if (!frame.hasFrame) {
         liveLabel_->setText("INPUT LOST");
-        statusLabel_->setText("视频流中断 · 请返回首页切换输入源");
+        statusLabel_->setText(
+            QStringLiteral("视频流中断 · 请返回首页切换输入源"));
         statusLabel_->setProperty("state", "warning");
         statusLabel_->style()->unpolish(statusLabel_);
         statusLabel_->style()->polish(statusLabel_);
         return;
     }
-    showFrame(frame.image);
-    const QString source = pipeline_.mode() == InputMode::Demo ? "DEMO" :
-                           pipeline_.mode() == InputMode::Camera ? "CAMERA" : "VIDEO";
-    liveLabel_->setText(QString("LIVE  ·  %1  ·  FPS %2")
-                            .arg(source)
-                            .arg(std::clamp(frame.fps, 0.0, 99.0), 0, 'f', 0));
 
+    showFrame(frame.image);
+
+    const QString source =
+        pipeline_.mode() == InputMode::Demo ? "DEMO" :
+        pipeline_.mode() == InputMode::Camera ? "CAMERA" :
+        "VIDEO";
+
+    // 暂停期间仍显示画面，但不把暂停帧混入性能统计。
     if (!session_.isRunning()) {
         timeLabel_->setText(formatTime(session_.activeSeconds()));
+        liveLabel_->setText(
+            QStringLiteral("LIVE · %1 · PAUSED").arg(source));
         return;
     }
+
     const ExerciseResult result = analyzer_->update(frame.pose);
     updateTrainingUi(result, frame.fps);
+
+    // 包含读取、推理、骨架绘制、动作分析及界面数据更新。
+    // Qt 后续实际绘制到屏幕的时间不在本次测量范围内。
+    const double processingMs =
+        static_cast<double>(processingTimer.nsecsElapsed()) / 1000000.0;
+
+    // 模型没有加载时，空推理会显得特别快，不作为有效性能成绩。
+    if (pipeline_.mode() != InputMode::Demo &&
+        !pipeline_.modelLoaded()) {
+        processingTimesMs_.clear();
+        liveLabel_->setText(
+            QStringLiteral("LIVE · %1 · MODEL NOT LOADED").arg(source));
+        return;
+    }
+
+    processingTimesMs_.push_back(processingMs);
+
+    constexpr std::size_t WindowSize = 100;
+    if (processingTimesMs_.size() > WindowSize) {
+        processingTimesMs_.pop_front();
+    }
+
+    const double sampleCount =
+        static_cast<double>(processingTimesMs_.size());
+
+    const double totalMs = std::accumulate(
+        processingTimesMs_.begin(),
+        processingTimesMs_.end(),
+        0.0);
+
+    const double averageMs = totalMs / sampleCount;
+
+    const auto overtimeCount = std::count_if(
+        processingTimesMs_.begin(),
+        processingTimesMs_.end(),
+        [](double ms) {
+            return ms > ProcessingBudgetMs;
+        });
+
+    const double overtimePercent =
+        100.0 * static_cast<double>(overtimeCount) / sampleCount;
+
+    // 第一行显示实时数据，第二行显示最近100帧的统计。
+    QString performanceText =
+        QStringLiteral(
+            "LIVE · %1 · FPS %2 · 处理 %3 ms\n"
+            "近%4帧均值 %5 ms · 超时率(>%6 ms) %7%")
+        .arg(source)
+        .arg(frame.fps, 0, 'f', 1)
+        .arg(processingMs, 0, 'f', 1)
+        .arg(static_cast<int>(processingTimesMs_.size()))
+        .arg(averageMs, 0, 'f', 1)
+        .arg(ProcessingBudgetMs, 0, 'f', 0)
+        .arg(overtimePercent, 0, 'f', 1);
+
+    if (pipeline_.mode() == InputMode::Demo) {
+        performanceText +=
+            QStringLiteral(" · 演示模式，不用于推理性能比较");
+    }
+
+    liveLabel_->setText(performanceText);
 }
 
 void MainWindow::updateTrainingUi(const ExerciseResult& result, double) {
