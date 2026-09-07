@@ -11,6 +11,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <deque>
 
 class QComboBox;
 class QLabel;
@@ -96,6 +97,12 @@ private:
     QLabel* resultProgress_{nullptr};
     QLabel* resultAverage_{nullptr};
     QTimer* frameTimer_{nullptr};
+
+    // 最近100个处理帧的耗时，单位毫秒。
+    std::deque<double> processingTimesMs_;
+
+    // 超时判定标准：各组比较时必须使用相同数值。
+    static constexpr double ProcessingBudgetMs = 100.0;
 };
 
 } // namespace sport
