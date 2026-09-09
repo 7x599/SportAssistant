@@ -17,6 +17,9 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 #include <QApplication>
 #include <QComboBox>
 #include <QCoreApplication>
+
+#include <QDebug>
+
 #include <QFile>
 #include <QFileDialog>
 #include <QFrame>
@@ -138,23 +141,44 @@ QWidget* MainWindow::buildHomePage() {
     content->setSpacing(58);
 
     auto* statement = new QVBoxLayout;
-    statement->setSpacing(18);
+    statement->setSpacing(25);
+    statement->setContentsMargins(0, 20, 0, 0);
     auto* title = new QLabel("把每一次计数，\n变成看得见的证据。");
     title->setObjectName("HomeHeadline");
     title->setWordWrap(true);
     statement->addWidget(title);
-    statement->addWidget(textLabel(
-        "摄像头画面、人体关键点、关节角度与动作相位在同一个窗口中同步呈现。"
-        "完整状态机只接受一次完整动作周期。", "HomeLead"));
-    auto* proof = new QLabel("KEYPOINTS  →  ANGLE  →  PHASE  →  VALID REP");
+    auto* proof = new QLabel("Turning Every Count into Visible Evidence");
     proof->setObjectName("PipelineText");
     statement->addWidget(proof);
-    statement->addStretch();
-    auto* fallback = textLabel(
-        "答辩保障：支持摄像头、本地 MP4 与内置演示三种输入。模型或设备不可用时，演示模式仍可验证成员 B 的全部算法与 UI 链路。",
-        "MutedText");
-    fallback->setMaximumWidth(560);
-    statement->addWidget(fallback);
+   
+
+    auto* photo = new QLabel;
+    photo->setObjectName("HomePhoto");
+    photo->setAlignment(Qt::AlignRight | Qt::AlignBottom);
+    photo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    QString imagePath = "C:/Code/SportAssistant/resources/peitu(5).png";
+
+    qDebug() << "文件是否存在:" << QFile::exists(imagePath);
+    qDebug() << "图片路径:" << imagePath;
+
+    QPixmap pix(imagePath);
+
+    qDebug() << "图片加载成功:" << !pix.isNull();
+
+    if (!pix.isNull()) {
+        photo->setPixmap(
+            pix.scaled(
+                500,
+                600,
+                Qt::KeepAspectRatio,
+                Qt::SmoothTransformation
+            )
+        );
+    }
+
+    statement->addWidget(photo, 1);
+
     content->addLayout(statement, 6);
 
     auto* setup = new QWidget;
@@ -170,8 +194,8 @@ QWidget* MainWindow::buildHomePage() {
 
     form->addWidget(textLabel("动作类型", "FieldLabel"));
     exerciseCombo_ = new QComboBox;
-    exerciseCombo_->addItem("深蹲 · 膝关节状态机", static_cast<int>(ExerciseType::Squat));
-    exerciseCombo_->addItem("俯卧撑 · 肘关节状态机", static_cast<int>(ExerciseType::PushUp));
+    exerciseCombo_->addItem("深蹲 Squat", static_cast<int>(ExerciseType::Squat));
+    exerciseCombo_->addItem("俯卧撑 Push-up", static_cast<int>(ExerciseType::PushUp));
     form->addWidget(exerciseCombo_);
 
     form->addWidget(textLabel("目标次数", "FieldLabel"));
@@ -189,9 +213,16 @@ QWidget* MainWindow::buildHomePage() {
     auto* demoButton = new QPushButton("演示");
     auto* cameraButton = new QPushButton("摄像头");
     auto* fileButton = new QPushButton("视频文件");
+
     demoButton->setObjectName("QuietButton");
     cameraButton->setObjectName("QuietButton");
     fileButton->setObjectName("QuietButton");
+    demoButton->setStyleSheet(
+        "QPushButton#QuietButton:focus {"
+        "    background: #1B3033;"
+        "    border: 1px solid #6ED1DC;"
+        "}"
+    );
     sources->addWidget(demoButton);
     sources->addWidget(cameraButton);
     sources->addWidget(fileButton);
