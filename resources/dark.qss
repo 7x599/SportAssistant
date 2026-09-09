@@ -185,11 +185,20 @@ QWidget#LiveStrip {
     border-bottom: 1px solid #2A383C;
 }
 
-QLabel#LiveText {
-    color: #57D59B;
+QLabel#SourceChip,
+QLabel#TelemetryChip {
+    background: #152326;
+    border: 1px solid #2A3C3F;
+    border-radius: 4px;
+    padding: 5px 10px;
+    color: #C7D7D4;
     font-family: "Cascadia Mono", "Consolas", monospace;
-    font-weight: 700;
-    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+QLabel#SourceChip {
+    color: #57D59B;
+    border-color: #2D6A55;
 }
 
 QLabel#VideoLabel {

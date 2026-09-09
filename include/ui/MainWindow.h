@@ -76,7 +76,9 @@ private:
     QSpinBox* targetSpin_{nullptr};
     QLabel* inputSummary_{nullptr};
     QLabel* videoLabel_{nullptr};
-    QLabel* liveLabel_{nullptr};
+    QLabel* sourceLabel_{nullptr};
+    QLabel* fpsLabel_{nullptr};
+    QLabel* latencyLabel_{nullptr};
     QLabel* exerciseLabel_{nullptr};
     QLabel* countLabel_{nullptr};
     QLabel* targetLabel_{nullptr};
@@ -98,11 +100,8 @@ private:
     QLabel* resultAverage_{nullptr};
     QTimer* frameTimer_{nullptr};
 
-    // ×î½ü100¸ö´¦ÀíÖ¡µÄºÄÊ±£¬µ¥Î»ºÁÃë¡£
+    // æœ€è¿‘ 100 ä¸ªå¤„ç†å¸§çš„è€—æ—¶ï¼Œä»…ç”¨äºè®¡ç®—ç•Œé¢ä¸Šçš„å¹³å‡å»¶è¿Ÿã€‚
     std::deque<double> processingTimesMs_;
-
-    // ³¬Ê±ÅĞ¶¨±ê×¼£º¸÷×é±È½ÏÊ±±ØĞëÊ¹ÓÃÏàÍ¬ÊıÖµ¡£
-    static constexpr double ProcessingBudgetMs = 100.0;
 };
 
 } // namespace sport

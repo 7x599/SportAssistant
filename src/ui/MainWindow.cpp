@@ -290,13 +290,17 @@ QWidget* MainWindow::buildTrainingPage() {
     liveStrip->setObjectName("LiveStrip");
     auto* liveLayout = new QHBoxLayout(liveStrip);
     liveLayout->setContentsMargins(18, 11, 18, 11);
-    liveLabel_ = new QLabel("LIVE  ·  DEMO");
-    liveLabel_->setObjectName("LiveText");
-    liveLayout->addWidget(liveLabel_);
+    liveLayout->setSpacing(10);
+    sourceLabel_ = new QLabel("演示");
+    fpsLabel_ = new QLabel("FPS —");
+    latencyLabel_ = new QLabel("平均延迟 — ms");
+    sourceLabel_->setObjectName("SourceChip");
+    fpsLabel_->setObjectName("TelemetryChip");
+    latencyLabel_->setObjectName("TelemetryChip");
+    liveLayout->addWidget(sourceLabel_);
+    liveLayout->addWidget(fpsLabel_);
+    liveLayout->addWidget(latencyLabel_);
     liveLayout->addStretch();
-    auto* evidence = new QLabel("POSE / ANGLE / PHASE");
-    evidence->setObjectName("EvidenceText");
-    liveLayout->addWidget(evidence);
     stageLayout->addWidget(liveStrip);
     videoLabel_ = new QLabel("等待视频输入");
     videoLabel_->setObjectName("VideoLabel");
@@ -573,7 +577,9 @@ void MainWindow::processFrame() {
     ProcessedFrame frame = pipeline_.read();
 
     if (!frame.hasFrame) {
-        liveLabel_->setText("INPUT LOST");
+        sourceLabel_->setText("输入中断");
+        fpsLabel_->setText("FPS —");
+        latencyLabel_->setText("平均延迟 — ms");
         statusLabel_->setText(
             QStringLiteral("视频流中断 · 请返回首页切换输入源"));
         statusLabel_->setProperty("state", "warning");
@@ -585,15 +591,15 @@ void MainWindow::processFrame() {
     showFrame(frame.image);
 
     const QString source =
-        pipeline_.mode() == InputMode::Demo ? "DEMO" :
-        pipeline_.mode() == InputMode::Camera ? "CAMERA" :
-        "VIDEO";
+        pipeline_.mode() == InputMode::Demo ? "演示" :
+        pipeline_.mode() == InputMode::Camera ? "摄像头" :
+        "视频";
 
     // 暂停期间仍显示画面，但不把暂停帧混入性能统计。
     if (!session_.isRunning()) {
         timeLabel_->setText(formatTime(session_.activeSeconds()));
-        liveLabel_->setText(
-            QStringLiteral("LIVE · %1 · PAUSED").arg(source));
+        sourceLabel_->setText(source + " · 已暂停");
+        fpsLabel_->setText(QStringLiteral("FPS %1").arg(frame.fps, 0, 'f', 1));
         return;
     }
 
@@ -609,8 +615,9 @@ void MainWindow::processFrame() {
     if (pipeline_.mode() != InputMode::Demo &&
         !pipeline_.modelLoaded()) {
         processingTimesMs_.clear();
-        liveLabel_->setText(
-            QStringLiteral("LIVE · %1 · MODEL NOT LOADED").arg(source));
+        sourceLabel_->setText(source);
+        fpsLabel_->setText(QStringLiteral("FPS %1").arg(frame.fps, 0, 'f', 1));
+        latencyLabel_->setText("模型未加载");
         return;
     }
 
@@ -631,35 +638,10 @@ void MainWindow::processFrame() {
 
     const double averageMs = totalMs / sampleCount;
 
-    const auto overtimeCount = std::count_if(
-        processingTimesMs_.begin(),
-        processingTimesMs_.end(),
-        [](double ms) {
-            return ms > ProcessingBudgetMs;
-        });
-
-    const double overtimePercent =
-        100.0 * static_cast<double>(overtimeCount) / sampleCount;
-
-    // 第一行显示实时数据，第二行显示最近100帧的统计。
-    QString performanceText =
-        QStringLiteral(
-            "LIVE · %1 · FPS %2 · 处理 %3 ms\n"
-            "近%4帧均值 %5 ms · 超时率(>%6 ms) %7%")
-        .arg(source)
-        .arg(frame.fps, 0, 'f', 1)
-        .arg(processingMs, 0, 'f', 1)
-        .arg(static_cast<int>(processingTimesMs_.size()))
-        .arg(averageMs, 0, 'f', 1)
-        .arg(ProcessingBudgetMs, 0, 'f', 0)
-        .arg(overtimePercent, 0, 'f', 1);
-
-    if (pipeline_.mode() == InputMode::Demo) {
-        performanceText +=
-            QStringLiteral(" · 演示模式，不用于推理性能比较");
-    }
-
-    liveLabel_->setText(performanceText);
+    sourceLabel_->setText(source);
+    fpsLabel_->setText(QStringLiteral("FPS %1").arg(frame.fps, 0, 'f', 1));
+    latencyLabel_->setText(
+        QStringLiteral("平均延迟 %1 ms").arg(averageMs, 0, 'f', 1));
 }
 
 void MainWindow::updateTrainingUi(const ExerciseResult& result, double) {
