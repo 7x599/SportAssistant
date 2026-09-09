@@ -66,7 +66,7 @@ Pose DemoPoseSource::makeSquatPose(double angle, double timestamp) const {
     pose.timestampSeconds = timestamp;
     pose.frameIndex = frameIndex_;
 
-    // ���׹̶���ϥ�Ǻ��Ų�����
+    // 脚踝固定，膝盖和髋部联动
     const double clampedAngle = std::clamp(angle, 45.0, 170.0);
     const double crouch =
         (170.0 - clampedAngle) / (170.0 - 45.0);
@@ -74,11 +74,11 @@ Pose DemoPoseSource::makeSquatPose(double angle, double timestamp) const {
     const double thigh = 165.0;
     const double shin = 175.0;
 
-    // ���׹̶��ڵ���
+    // 脚踝固定在地面
     const double ankleX = 650.0;
     const double ankleY = 650.0;
 
-    // �¶�ʱϥ����ǰ�˶�
+    // 下蹲时膝盖向前运动
     const double ankleToKneeDirection =
         (-92.0 + 30.0 * crouch) * pi / 180.0;
 
@@ -87,7 +87,7 @@ Pose DemoPoseSource::makeSquatPose(double angle, double timestamp) const {
     const double kneeY =
         ankleY + shin * std::sin(ankleToKneeDirection);
 
-    // ����Ŀ��ϥ�ؽڽǶȼ����Ų�λ��
+    // 根据目标膝关节角度计算髋部位置
     const double kneeToAnkleDirection =
         std::atan2(ankleY - kneeY, ankleX - kneeX);
 
@@ -99,7 +99,7 @@ Pose DemoPoseSource::makeSquatPose(double angle, double timestamp) const {
     const double hipY =
         kneeY + thigh * std::sin(kneeToHipDirection);
 
-    // �¶�ʱ������΢ǰ��
+    // 下蹲时上身轻微前倾
     const double torsoDirection =
         (-90.0 + 18.0 * crouch) * pi / 180.0;
 
@@ -195,7 +195,7 @@ Pose DemoPoseSource::makePushUpPose(
     const double elbowRadians =
         clampedAngle * pi / 180.0;
 
-    // ������ؽڽǶȼ���絽����ľ���
+    // 根据肘关节角度计算肩到手腕的距离
     const double shoulderToWrist = std::sqrt(
         upperArm * upperArm +
         forearm * forearm -
@@ -203,11 +203,11 @@ Pose DemoPoseSource::makePushUpPose(
         std::cos(elbowRadians)
     );
 
-    // ����̶��ڵ���
+    // 手腕固定在地面
     const double wristX = 350.0;
     const double wristY = 620.0;
 
-    // ��ѹʱ������²���΢����ƶ�
+    // 下压时肩膀向下并略微向后移动
     const double wristToShoulderDirection =
         (-90.0 + 6.0 * bend) * pi / 180.0;
 
@@ -221,7 +221,7 @@ Pose DemoPoseSource::makePushUpPose(
         shoulderToWrist *
         std::sin(wristToShoulderDirection);
 
-    // ͨ������Բ�Ľ����������λ��
+    // 通过两个圆的交点计算手肘位置
     const double armDx = wristX - shoulderX;
     const double armDy = wristY - shoulderY;
 
@@ -252,17 +252,17 @@ Pose DemoPoseSource::makePushUpPose(
     const double perpendicularX = -unitY;
     const double perpendicularY = unitX;
 
-    // ѡ����Ų��Ľ��㣬��������Ȼ�������
+    // 选择朝向脚部的交点，让手肘自然向后弯曲
     const double elbowX =
         baseX - height * perpendicularX;
     const double elbowY =
         baseY - height * perpendicularY;
 
-    // ���׹̶�
+    // 脚踝固定
     const double ankleX = 820.0;
     const double ankleY = 620.0;
 
-    // ����ӽ�ֱ�ߵļ硪�š���
+    // 构造接近直线的肩—髋—踝
     const double bodyDx =
         ankleX - shoulderX;
     const double bodyDy =
