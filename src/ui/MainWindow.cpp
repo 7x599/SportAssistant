@@ -38,15 +38,16 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 #include <QStyle>
 #include <QTimer>
 #include <QVBoxLayout>
-
 #include <algorithm>
 #include <cmath>
 #include <utility>
-
+#include <QHeaderView>
+#include <QDateTime>
+#include <QTextStream>
+#include <filesystem>
 #include <QElapsedTimer>
-
-#include <algorithm>
 #include <numeric>
+
 
 namespace sport {
 
@@ -81,6 +82,7 @@ MainWindow::MainWindow(LaunchOptions options, QWidget* parent)
     pages_->addWidget(buildHomePage());
     pages_->addWidget(buildTrainingPage());
     pages_->addWidget(buildResultPage());
+    pages_->addWidget(buildLogPage());  // Index 3: 日志页
     setCentralWidget(pages_);
 
     frameTimer_ = new QTimer(this);
@@ -243,6 +245,15 @@ QWidget* MainWindow::buildHomePage() {
     startButton->setDefault(true);
     connect(startButton, &QPushButton::clicked, this, &MainWindow::startTraining);
     form->addWidget(startButton);
+
+    auto* logButton = new QPushButton("查看历史记录");
+    logButton->setObjectName("SecondaryButton");
+    logButton->setMinimumHeight(48);
+    connect(logButton, &QPushButton::clicked, this, [this]() {
+        loadLogData();
+        pages_->setCurrentIndex(3);
+        });
+    form->addWidget(logButton);
 
     form->addWidget(textLabel("训练记录将自动保存为本地 CSV。", "MutedText"));
     form->addStretch();
@@ -531,8 +542,8 @@ void MainWindow::finishTraining() {
     resultDuration_->setText(formatTime(summary.activeSeconds));
     resultProgress_->setText(QString("%1%").arg(std::lround(summary.completionRate * 100.0)));
     resultAverage_->setText(summary.validCount > 0
-                                ? QString("%1 秒/次").arg(summary.averageRepSeconds, 0, 'f', 1)
-                                : "—");
+        ? QString("%1 秒/次").arg(summary.averageRepSeconds, 0, 'f', 1)
+        : "—");
     pages_->setCurrentIndex(2);
 }
 
@@ -697,7 +708,156 @@ QString MainWindow::formatTime(double seconds) const {
 
 std::filesystem::path MainWindow::recordPath() const {
     const QString root = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
-    return std::filesystem::path(root.toStdString()) / "data" / "training_records.csv";
+    std::filesystem::path dir = std::filesystem::path(root.toStdString()) / "data";
+
+    // 【关键修复】如果 data 目录不存在，自动创建
+    if (!std::filesystem::exists(dir)) {
+        std::filesystem::create_directories(dir);
+    }
+
+    return dir / "training_records.csv";
 }
 
-} // namespace sport
+} 
+QWidget* sport::MainWindow::buildLogPage() {
+    auto* page = new QWidget;
+    page->setObjectName("LogPage");
+    auto* root = new QVBoxLayout(page);
+    root->setContentsMargins(0, 0, 0, 0);
+    root->setSpacing(0);
+    root->addWidget(buildTopBar("训练日志", "仅显示今日 00:00 – 23:59 的记录"));
+    root->addWidget(divider());
+
+    auto* body = new QVBoxLayout;
+    body->setContentsMargins(54, 36, 54, 36);
+    body->setSpacing(16);
+
+    logTableWidget_ = new QTableWidget;
+    logTableWidget_->setObjectName("LogTable");
+
+    // 【修改1】改为5列，去掉备注
+    logTableWidget_->setColumnCount(5);
+    logTableWidget_->setHorizontalHeaderLabels({
+        "开始时刻", "运动时长", "运动类型", "有效/目标", "完成率"
+        });
+
+    // 【修改2】增加这行，解决“开始时刻”太短显示不全的问题
+    logTableWidget_->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    // 让最后一列（完成率）拉伸填满剩余空间，看起来更整齐
+    logTableWidget_->horizontalHeader()->setStretchLastSection(true);
+
+    logTableWidget_->setSelectionBehavior(QAbstractItemView::SelectRows);
+    logTableWidget_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    logTableWidget_->verticalHeader()->setVisible(false);
+    body->addWidget(logTableWidget_, 1);
+
+    auto* backBtn = new QPushButton("返回首页");
+    backBtn->setObjectName("SecondaryButton");
+    backBtn->setMinimumHeight(48);
+    backBtn->setFixedWidth(160);
+    connect(backBtn, &QPushButton::clicked, this, [this]() {
+        pages_->setCurrentIndex(0);
+        });
+    body->addWidget(backBtn, 0, Qt::AlignLeft);
+
+    root->addLayout(body, 1);
+    return page;
+}
+void sport::MainWindow::loadLogData() {
+    qDebug() << ">>> [LOAD] loadLogData 开始执行...";
+
+    if (!logTableWidget_) {
+        qDebug() << ">>> [LOAD] 错误：表格控件未初始化！";
+        return;
+    }
+
+    logTableWidget_->setRowCount(0);
+    qDebug() << ">>> [LOAD] 表格已清空，准备读取文件...";
+
+    const auto csvPath = recordPath();
+    QFile file(QString::fromStdWString(csvPath.wstring()));
+
+    if (!file.exists()) {
+        qDebug() << ">>> [LOAD] 错误：文件不存在 ->" << csvPath;
+        return;
+    }
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qDebug() << ">>> [LOAD] 错误：无法打开文件";
+        return;
+    }
+
+    QTextStream in(&file);
+    in.setEncoding(QStringConverter::Utf8);
+
+    // 计算今日时间范围 (秒级)
+    const QDateTime todayStart = QDateTime::currentDateTime().date().startOfDay();
+    const qint64 todayStartSec = todayStart.toSecsSinceEpoch();
+    const qint64 todayEndSec = todayStartSec + 86400;
+
+    QString line = in.readLine(); // 跳过 CSV 表头
+    int loadedCount = 0;
+
+    while (!in.atEnd()) {
+        line = in.readLine().trimmed();
+        if (line.isEmpty()) continue;
+
+        const QStringList cols = line.split(',');
+
+        // 【严格校验】必须至少有 8 列数据，否则跳过
+        // 0:timestamp, 1:exercise, 2:target, 3:valid, 4:invalid, 5:duration_seconds, 6:completion_rate, 7:average_rep_seconds
+        if (cols.size() < 8) continue;
+
+        // --- 1. 解析时间并过滤 ---
+        QDateTime dt = QDateTime::fromString(cols[0], "yyyy-MM-dd HH:mm:ss");
+        if (!dt.isValid()) continue;
+
+        qint64 ts = dt.toSecsSinceEpoch();
+        // 仅加载今日数据
+        if (ts < todayStartSec || ts >= todayEndSec) {
+            continue;
+        }
+
+        // --- 2. 核心数据提取 (索引已严格对齐) ---
+
+        // 解析运动时长：读取索引 5 (duration_seconds)
+        double duration = cols[5].toDouble();
+        int totalSec = static_cast<int>(duration);
+        int m = totalSec / 60;
+        int s = totalSec % 60;
+        QString durStr = QString("%1:%2").arg(m, 2, 10, QChar('0')).arg(s, 2, 10, QChar('0'));
+
+        // 解析运动类型：读取索引 1 (exercise)
+        QString exerciseNameStr;
+        bool isInt = false;
+        int exType = cols[1].toInt(&isInt);
+        if (isInt) {
+            exerciseNameStr = QString::fromStdString(exerciseName(static_cast<ExerciseType>(exType)).data());
+        }
+        else {
+            exerciseNameStr = cols[1];
+        }
+
+        // 解析次数：读取索引 2(target) 和 3(valid)
+        int targetCount = cols[2].toInt();
+        int validCount = cols[3].toInt();
+        QString countStr = QString("%1 / %2").arg(validCount).arg(targetCount);
+
+        // 解析完成率：读取索引 6 (completion_rate)
+        double rateVal = cols[6].toDouble();
+        QString rateStr = QString("%1%").arg(std::lround(rateVal * 100.0));
+
+        // --- 3. 插入表格 (共5列) ---
+        const int row = logTableWidget_->rowCount();
+        logTableWidget_->insertRow(row);
+        logTableWidget_->setItem(row, 0, new QTableWidgetItem(dt.toString("yyyy-MM-dd HH:mm:ss")));
+        logTableWidget_->setItem(row, 1, new QTableWidgetItem(durStr));
+        logTableWidget_->setItem(row, 2, new QTableWidgetItem(exerciseNameStr));
+        logTableWidget_->setItem(row, 3, new QTableWidgetItem(countStr));
+        logTableWidget_->setItem(row, 4, new QTableWidgetItem(rateStr));
+
+        loadedCount++;
+    }
+
+    qDebug() << ">>> [LOAD] 完成！共加载今日记录：" << loadedCount << "条";
+}

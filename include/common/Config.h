@@ -12,9 +12,9 @@ struct AnalyzerConfig {
     double maximumRepSeconds{8.0};//单次动作的最短 / 最长时长（过滤无效计数）
 
     struct Squat {
-        double standingAngle{155.0};//站立姿态的膝盖参考角度
-        double bottomAngle{100.0};//蹲到底的膝盖参考角度
-        double descentStartAngle{145.0};//下蹲起始触发角度
+        double standingAngle{160.0};//站立姿态的膝盖参考角度
+        double bottomAngle{60.0};//蹲到底的膝盖参考角度
+        double descentStartAngle{140.0};//下蹲起始触发角度
     } squat;
 
     struct PushUp {

@@ -13,6 +13,8 @@
 #include <memory>
 #include <deque>
 
+#include <QTableWidget>
+   
 class QComboBox;
 class QLabel;
 class QProgressBar;
@@ -48,12 +50,16 @@ private slots:
     void selectDemo();
     void processFrame();
 
-private:
+private:                 
     QWidget* buildHomePage();
     QWidget* buildTrainingPage();
     QWidget* buildResultPage();
     QWidget* buildTopBar(const QString& title, const QString& subtitle = {});
     QWidget* makeMetricRow(const QString& label, QLabel*& valueLabel, const QString& objectName);
+    // === ��������־ҳ����� ===
+    QWidget* buildLogPage();
+    void loadLogData();
+    QTableWidget* logTableWidget_{ nullptr };
     void configureInput();
     void setExercise(ExerciseType exercise);
     void resetAnalyzer();
@@ -100,8 +106,10 @@ private:
     QLabel* resultAverage_{nullptr};
     QTimer* frameTimer_{nullptr};
 
-    // 最近 100 个处理帧的耗时，仅用于计算界面上的平均延迟。
+
+    // 最�?100 个处理帧的耗时，仅用于计算界面上的平均延迟�?
     std::deque<double> processingTimesMs_;
+
 };
 
-} // namespace sport
+} //namespace sport
