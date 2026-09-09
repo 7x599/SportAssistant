@@ -17,6 +17,9 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 #include <QApplication>
 #include <QComboBox>
 #include <QCoreApplication>
+
+#include <QDebug>
+
 #include <QFile>
 #include <QFileDialog>
 #include <QFrame>
@@ -35,15 +38,16 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 #include <QStyle>
 #include <QTimer>
 #include <QVBoxLayout>
-
 #include <algorithm>
 #include <cmath>
 #include <utility>
-
 #include <QHeaderView>
 #include <QDateTime>
 #include <QTextStream>
 #include <filesystem>
+#include <QElapsedTimer>
+#include <numeric>
+
 
 namespace sport {
 
@@ -144,23 +148,44 @@ QWidget* MainWindow::buildHomePage() {
     content->setSpacing(58);
 
     auto* statement = new QVBoxLayout;
-    statement->setSpacing(18);
+    statement->setSpacing(25);
+    statement->setContentsMargins(0, 20, 0, 0);
     auto* title = new QLabel("把每一次计数，\n变成看得见的证据。");
     title->setObjectName("HomeHeadline");
     title->setWordWrap(true);
     statement->addWidget(title);
-    statement->addWidget(textLabel(
-        "摄像头画面、人体关键点、关节角度与动作相位在同一个窗口中同步呈现。"
-        "完整状态机只接受一次完整动作周期。", "HomeLead"));
-    auto* proof = new QLabel("KEYPOINTS  →  ANGLE  →  PHASE  →  VALID REP");
+    auto* proof = new QLabel("Turning Every Count into Visible Evidence");
     proof->setObjectName("PipelineText");
     statement->addWidget(proof);
-    statement->addStretch();
-    auto* fallback = textLabel(
-        "答辩保障：支持摄像头、本地 MP4 与内置演示三种输入。模型或设备不可用时，演示模式仍可验证成员 B 的全部算法与 UI 链路。",
-        "MutedText");
-    fallback->setMaximumWidth(560);
-    statement->addWidget(fallback);
+   
+
+    auto* photo = new QLabel;
+    photo->setObjectName("HomePhoto");
+    photo->setAlignment(Qt::AlignRight | Qt::AlignBottom);
+    photo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    QString imagePath = "C:/Code/SportAssistant/resources/peitu(5).png";
+
+    qDebug() << "文件是否存在:" << QFile::exists(imagePath);
+    qDebug() << "图片路径:" << imagePath;
+
+    QPixmap pix(imagePath);
+
+    qDebug() << "图片加载成功:" << !pix.isNull();
+
+    if (!pix.isNull()) {
+        photo->setPixmap(
+            pix.scaled(
+                500,
+                600,
+                Qt::KeepAspectRatio,
+                Qt::SmoothTransformation
+            )
+        );
+    }
+
+    statement->addWidget(photo, 1);
+
     content->addLayout(statement, 6);
 
     auto* setup = new QWidget;
@@ -176,8 +201,8 @@ QWidget* MainWindow::buildHomePage() {
 
     form->addWidget(textLabel("动作类型", "FieldLabel"));
     exerciseCombo_ = new QComboBox;
-    exerciseCombo_->addItem("深蹲 · 膝关节状态机", static_cast<int>(ExerciseType::Squat));
-    exerciseCombo_->addItem("俯卧撑 · 肘关节状态机", static_cast<int>(ExerciseType::PushUp));
+    exerciseCombo_->addItem("深蹲 Squat", static_cast<int>(ExerciseType::Squat));
+    exerciseCombo_->addItem("俯卧撑 Push-up", static_cast<int>(ExerciseType::PushUp));
     form->addWidget(exerciseCombo_);
 
     form->addWidget(textLabel("目标次数", "FieldLabel"));
@@ -195,9 +220,16 @@ QWidget* MainWindow::buildHomePage() {
     auto* demoButton = new QPushButton("演示");
     auto* cameraButton = new QPushButton("摄像头");
     auto* fileButton = new QPushButton("视频文件");
+
     demoButton->setObjectName("QuietButton");
     cameraButton->setObjectName("QuietButton");
     fileButton->setObjectName("QuietButton");
+    demoButton->setStyleSheet(
+        "QPushButton#QuietButton:focus {"
+        "    background: #1B3033;"
+        "    border: 1px solid #6ED1DC;"
+        "}"
+    );
     sources->addWidget(demoButton);
     sources->addWidget(cameraButton);
     sources->addWidget(fileButton);
@@ -269,13 +301,17 @@ QWidget* MainWindow::buildTrainingPage() {
     liveStrip->setObjectName("LiveStrip");
     auto* liveLayout = new QHBoxLayout(liveStrip);
     liveLayout->setContentsMargins(18, 11, 18, 11);
-    liveLabel_ = new QLabel("LIVE  ·  DEMO");
-    liveLabel_->setObjectName("LiveText");
-    liveLayout->addWidget(liveLabel_);
+    liveLayout->setSpacing(10);
+    sourceLabel_ = new QLabel("演示");
+    fpsLabel_ = new QLabel("FPS —");
+    latencyLabel_ = new QLabel("平均延迟 — ms");
+    sourceLabel_->setObjectName("SourceChip");
+    fpsLabel_->setObjectName("TelemetryChip");
+    latencyLabel_->setObjectName("TelemetryChip");
+    liveLayout->addWidget(sourceLabel_);
+    liveLayout->addWidget(fpsLabel_);
+    liveLayout->addWidget(latencyLabel_);
     liveLayout->addStretch();
-    auto* evidence = new QLabel("POSE / ANGLE / PHASE");
-    evidence->setObjectName("EvidenceText");
-    liveLayout->addWidget(evidence);
     stageLayout->addWidget(liveStrip);
     videoLabel_ = new QLabel("等待视频输入");
     videoLabel_->setObjectName("VideoLabel");
@@ -459,6 +495,7 @@ void MainWindow::resetAnalyzer() {
 }
 
 void MainWindow::startTraining() {
+    processingTimesMs_.clear();
     setExercise(static_cast<ExerciseType>(exerciseCombo_->currentData().toInt()));
     session_.start(exercise_, targetSpin_->value());
     exerciseLabel_->setText(QString::fromUtf8(exerciseName(exercise_).data()));
@@ -544,28 +581,78 @@ void MainWindow::selectDemo() {
 }
 
 void MainWindow::processFrame() {
+    // 使用单调计时器测量本次处理耗时。
+    QElapsedTimer processingTimer;
+    processingTimer.start();
+
     ProcessedFrame frame = pipeline_.read();
+
     if (!frame.hasFrame) {
-        liveLabel_->setText("INPUT LOST");
-        statusLabel_->setText("视频流中断 · 请返回首页切换输入源");
+        sourceLabel_->setText("输入中断");
+        fpsLabel_->setText("FPS —");
+        latencyLabel_->setText("平均延迟 — ms");
+        statusLabel_->setText(
+            QStringLiteral("视频流中断 · 请返回首页切换输入源"));
         statusLabel_->setProperty("state", "warning");
         statusLabel_->style()->unpolish(statusLabel_);
         statusLabel_->style()->polish(statusLabel_);
         return;
     }
-    showFrame(frame.image);
-    const QString source = pipeline_.mode() == InputMode::Demo ? "DEMO" :
-                           pipeline_.mode() == InputMode::Camera ? "CAMERA" : "VIDEO";
-    liveLabel_->setText(QString("LIVE  ·  %1  ·  FPS %2")
-                            .arg(source)
-                            .arg(std::clamp(frame.fps, 0.0, 99.0), 0, 'f', 0));
 
+    showFrame(frame.image);
+
+    const QString source =
+        pipeline_.mode() == InputMode::Demo ? "演示" :
+        pipeline_.mode() == InputMode::Camera ? "摄像头" :
+        "视频";
+
+    // 暂停期间仍显示画面，但不把暂停帧混入性能统计。
     if (!session_.isRunning()) {
         timeLabel_->setText(formatTime(session_.activeSeconds()));
+        sourceLabel_->setText(source + " · 已暂停");
+        fpsLabel_->setText(QStringLiteral("FPS %1").arg(frame.fps, 0, 'f', 1));
         return;
     }
+
     const ExerciseResult result = analyzer_->update(frame.pose);
     updateTrainingUi(result, frame.fps);
+
+    // 包含读取、推理、骨架绘制、动作分析及界面数据更新。
+    // Qt 后续实际绘制到屏幕的时间不在本次测量范围内。
+    const double processingMs =
+        static_cast<double>(processingTimer.nsecsElapsed()) / 1000000.0;
+
+    // 模型没有加载时，空推理会显得特别快，不作为有效性能成绩。
+    if (pipeline_.mode() != InputMode::Demo &&
+        !pipeline_.modelLoaded()) {
+        processingTimesMs_.clear();
+        sourceLabel_->setText(source);
+        fpsLabel_->setText(QStringLiteral("FPS %1").arg(frame.fps, 0, 'f', 1));
+        latencyLabel_->setText("模型未加载");
+        return;
+    }
+
+    processingTimesMs_.push_back(processingMs);
+
+    constexpr std::size_t WindowSize = 100;
+    if (processingTimesMs_.size() > WindowSize) {
+        processingTimesMs_.pop_front();
+    }
+
+    const double sampleCount =
+        static_cast<double>(processingTimesMs_.size());
+
+    const double totalMs = std::accumulate(
+        processingTimesMs_.begin(),
+        processingTimesMs_.end(),
+        0.0);
+
+    const double averageMs = totalMs / sampleCount;
+
+    sourceLabel_->setText(source);
+    fpsLabel_->setText(QStringLiteral("FPS %1").arg(frame.fps, 0, 'f', 1));
+    latencyLabel_->setText(
+        QStringLiteral("平均延迟 %1 ms").arg(averageMs, 0, 'f', 1));
 }
 
 void MainWindow::updateTrainingUi(const ExerciseResult& result, double) {

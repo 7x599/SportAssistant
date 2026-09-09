@@ -11,6 +11,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <deque>
 
 #include <QTableWidget>
    
@@ -81,7 +82,9 @@ private:
     QSpinBox* targetSpin_{nullptr};
     QLabel* inputSummary_{nullptr};
     QLabel* videoLabel_{nullptr};
-    QLabel* liveLabel_{nullptr};
+    QLabel* sourceLabel_{nullptr};
+    QLabel* fpsLabel_{nullptr};
+    QLabel* latencyLabel_{nullptr};
     QLabel* exerciseLabel_{nullptr};
     QLabel* countLabel_{nullptr};
     QLabel* targetLabel_{nullptr};
@@ -102,7 +105,11 @@ private:
     QLabel* resultProgress_{nullptr};
     QLabel* resultAverage_{nullptr};
     QTimer* frameTimer_{nullptr};
-    
+
+
+    // 最�?100 个处理帧的耗时，仅用于计算界面上的平均延迟�?
+    std::deque<double> processingTimesMs_;
+
 };
 
 } //namespace sport

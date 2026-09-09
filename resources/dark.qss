@@ -38,7 +38,7 @@ QLabel#TopSubtitle, QLabel#MutedText {
 QLabel#BuildTag, QLabel#PipelineText, QLabel#EvidenceText {
     color: #65C8D4;
     font-family: "Cascadia Mono", "Consolas", monospace;
-    font-size: 11px;
+    font-size: 18px;
     font-weight: 600;
     letter-spacing: 1px;
 }
@@ -51,7 +51,7 @@ QFrame#Divider {
 
 QLabel#HomeHeadline {
     color: #F2F7F4;
-    font-size: 42px;
+    font-size: 44px;
     font-weight: 750;
     letter-spacing: -1px;
 }
@@ -185,11 +185,20 @@ QWidget#LiveStrip {
     border-bottom: 1px solid #2A383C;
 }
 
-QLabel#LiveText {
-    color: #57D59B;
+QLabel#SourceChip,
+QLabel#TelemetryChip {
+    background: #152326;
+    border: 1px solid #2A3C3F;
+    border-radius: 4px;
+    padding: 5px 10px;
+    color: #C7D7D4;
     font-family: "Cascadia Mono", "Consolas", monospace;
-    font-weight: 700;
-    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+QLabel#SourceChip {
+    color: #57D59B;
+    border-color: #2D6A55;
 }
 
 QLabel#VideoLabel {
