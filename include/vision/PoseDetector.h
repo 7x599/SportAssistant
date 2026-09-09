@@ -26,8 +26,8 @@ private:
     bool loaded_{false};
     std::string lastError_;
     std::uint64_t frameIndex_{0};
-    int inputWidth_{640};
-    int inputHeight_{640};
+    int inputWidth_{416};
+    int inputHeight_{416};
     float personThreshold_{0.35F};
     float keypointThreshold_{0.35F};
 };

@@ -12,6 +12,8 @@
 #include <filesystem>
 #include <memory>
 
+#include <QTableWidget>
+   
 class QComboBox;
 class QLabel;
 class QProgressBar;
@@ -47,12 +49,16 @@ private slots:
     void selectDemo();
     void processFrame();
 
-private:
+private:                 
     QWidget* buildHomePage();
     QWidget* buildTrainingPage();
     QWidget* buildResultPage();
     QWidget* buildTopBar(const QString& title, const QString& subtitle = {});
     QWidget* makeMetricRow(const QString& label, QLabel*& valueLabel, const QString& objectName);
+    // === 新增：日志页面相关 ===
+    QWidget* buildLogPage();
+    void loadLogData();
+    QTableWidget* logTableWidget_{ nullptr };
     void configureInput();
     void setExercise(ExerciseType exercise);
     void resetAnalyzer();
@@ -96,6 +102,7 @@ private:
     QLabel* resultProgress_{nullptr};
     QLabel* resultAverage_{nullptr};
     QTimer* frameTimer_{nullptr};
+    
 };
 
-} // namespace sport
+} //namespace sport

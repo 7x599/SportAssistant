@@ -18,7 +18,7 @@ def main() -> None:
 
     model = YOLO("yolo11n-pose.pt")
     exported = Path(
-        model.export(format="onnx", imgsz=640, simplify=True, dynamic=False, opset=17)
+        model.export(format="onnx", imgsz=416, simplify=True, dynamic=False, opset=17)
     )
     destination = models_dir / "yolo11n-pose.onnx"
     destination.write_bytes(exported.read_bytes())

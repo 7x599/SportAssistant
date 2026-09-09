@@ -5,6 +5,9 @@
 #include <algorithm>
 #include <array>
 #include <exception>
+#include <iostream>
+#include <chrono>
+
 
 namespace sport {
 
@@ -46,6 +49,12 @@ bool PoseDetector::load(const std::filesystem::path& modelPath) {
         net_.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
         net_.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
         loaded_ = !net_.empty();
+
+if (loaded_)
+        {
+            cv::setNumThreads(4);
+        }
+
         lastError_ = loaded_ ? std::string{} : "ONNX 模型加载失败";
         return loaded_;
     } catch (const std::exception& exception) {
@@ -63,6 +72,8 @@ Pose PoseDetector::detect(const cv::Mat& frame, double timestampSeconds) {
         return pose;
     }
 
+    auto time_start = std::chrono::high_resolution_clock::now();
+   
     const float scale = std::min(
         static_cast<float>(inputWidth_) / static_cast<float>(frame.cols),
         static_cast<float>(inputHeight_) / static_cast<float>(frame.rows));
@@ -130,6 +141,10 @@ Pose PoseDetector::detect(const cv::Mat& frame, double timestampSeconds) {
         point.y = std::clamp(point.y, 0.0F, static_cast<float>(frame.rows - 1));
         point.confidence = values[base + 2];
     }
+    auto time_end = std::chrono::high_resolution_clock::now();
+    long long cost_ms = std::chrono::duration_cast<std::chrono::milliseconds>(time_end - time_start).count();
+    std::cout << "[DEBUG] inference cost: " << cost_ms << " ms" << std::endl;
+
     return pose;
 }
 
