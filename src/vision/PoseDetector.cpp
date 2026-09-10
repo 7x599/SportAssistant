@@ -72,7 +72,7 @@ Pose PoseDetector::detect(const cv::Mat& frame, double timestampSeconds) {
         return pose;
     }
 
-    auto time_start = std::chrono::high_resolution_clock::now();
+    //auto time_start = std::chrono::high_resolution_clock::now();
    
     const float scale = std::min(
         static_cast<float>(inputWidth_) / static_cast<float>(frame.cols),
@@ -141,9 +141,9 @@ Pose PoseDetector::detect(const cv::Mat& frame, double timestampSeconds) {
         point.y = std::clamp(point.y, 0.0F, static_cast<float>(frame.rows - 1));
         point.confidence = values[base + 2];
     }
-    auto time_end = std::chrono::high_resolution_clock::now();
-    long long cost_ms = std::chrono::duration_cast<std::chrono::milliseconds>(time_end - time_start).count();
-    std::cout << "[DEBUG] inference cost: " << cost_ms << " ms" << std::endl;
+    //auto time_end = std::chrono::high_resolution_clock::now();
+    //long long cost_ms = std::chrono::duration_cast<std::chrono::milliseconds>(time_end - time_start).count();
+   // std::cout << "[DEBUG] inference cost: " << cost_ms << " ms" << std::endl;
 
     return pose;
 }
