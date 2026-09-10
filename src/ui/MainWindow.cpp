@@ -128,7 +128,7 @@ QWidget* MainWindow::buildTopBar(const QString& title, const QString& subtitle) 
     layout->addLayout(titleBlock);
     layout->addStretch();
 
-    auto* buildTag = new QLabel("LOCAL · C++ / QT");
+    auto* buildTag = new QLabel("● VISION ACTIVE");
     buildTag->setObjectName("BuildTag");
     layout->addWidget(buildTag);
     return bar;
@@ -164,7 +164,7 @@ QWidget* MainWindow::buildHomePage() {
     photo->setAlignment(Qt::AlignRight | Qt::AlignBottom);
     photo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    QString imagePath = "C:/Code/SportAssistant/resources/peitu(5).png";
+    QString imagePath = "D:/code/exercise/SportAssistant/resources/peitu(5).png";
 
     qDebug() << "文件是否存在:" << QFile::exists(imagePath);
     qDebug() << "图片路径:" << imagePath;
@@ -215,6 +215,21 @@ QWidget* MainWindow::buildHomePage() {
     form->addWidget(textLabel("输入源", "FieldLabel"));
     inputSummary_ = textLabel("内置演示", "InputSummary");
     form->addWidget(inputSummary_);
+
+    // 新增：摄像头编号选择
+    cameraCombo_ = new QComboBox;
+    cameraCombo_->addItem("摄像头 0（电脑摄像头）", 0);
+    cameraCombo_->addItem("摄像头 1（Pocket 4）", 1);
+
+    // 如果程序启动参数本身指定了 camera 0/1，
+    // 这里自动显示对应值
+    const int cameraIndex = cameraCombo_->findData(options_.cameraIndex);
+    if (cameraIndex >= 0) {
+        cameraCombo_->setCurrentIndex(cameraIndex);
+    }
+
+    form->addWidget(cameraCombo_);
+
     auto* sources = new QHBoxLayout;
     sources->setSpacing(8);
     auto* demoButton = new QPushButton("演示");
@@ -495,6 +510,25 @@ void MainWindow::resetAnalyzer() {
 }
 
 void MainWindow::startTraining() {
+    if (options_.inputMode == InputMode::Camera && cameraCombo_) {
+        const int selectedCamera =
+            cameraCombo_->currentData().toInt();
+
+        if (selectedCamera != options_.cameraIndex) {
+            options_.cameraIndex = selectedCamera;
+            configureInput();
+        }
+    }
+
+    processingTimesMs_.clear();
+
+    setExercise(
+        static_cast<ExerciseType>(
+            exerciseCombo_->currentData().toInt()
+            )
+    );
+
+    session_.start(exercise_, targetSpin_->value());
     processingTimesMs_.clear();
     setExercise(static_cast<ExerciseType>(exerciseCombo_->currentData().toInt()));
     session_.start(exercise_, targetSpin_->value());
@@ -569,6 +603,12 @@ void MainWindow::selectVideoFile() {
 
 void MainWindow::selectCamera() {
     options_.inputMode = InputMode::Camera;
+
+    // 新增：从界面读取用户选择的摄像头编号
+    if (cameraCombo_) {
+        options_.cameraIndex = cameraCombo_->currentData().toInt();
+    }
+
     configureInput();
     if (pipeline_.mode() != InputMode::Camera) {
         QMessageBox::information(this, "摄像头不可用", "未能打开摄像头，已自动切换到演示模式。请检查 USB 连接和系统相机权限。 ");

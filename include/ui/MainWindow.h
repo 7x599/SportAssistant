@@ -14,6 +14,7 @@
 #include <deque>
 
 #include <QTableWidget>
+#include <QComboBox>
    
 class QComboBox;
 class QLabel;
@@ -80,6 +81,7 @@ private:
     QStackedWidget* pages_{nullptr};
     QComboBox* exerciseCombo_{nullptr};
     QSpinBox* targetSpin_{nullptr};
+    QComboBox* cameraCombo_{ nullptr };
     QLabel* inputSummary_{nullptr};
     QLabel* videoLabel_{nullptr};
     QLabel* sourceLabel_{nullptr};
